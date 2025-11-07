@@ -1,0 +1,163 @@
+CREATE TABLE dim_customer (
+  customer_id SERIAL PRIMARY KEY,
+  customer_name VARCHAR(100),
+  country VARCHAR(50)
+);
+
+CREATE TABLE dim_agent (
+  agent_id SERIAL PRIMARY KEY,
+  agent_name VARCHAR(100),
+  department VARCHAR(50)
+);
+
+CREATE TABLE dim_time (
+  time_id SERIAL PRIMARY KEY,
+  call_date DATE,
+  week INT,
+  month VARCHAR(20),
+  year INT
+);
+
+CREATE TABLE dim_issue_type (
+  issue_id SERIAL PRIMARY KEY,
+  issue_type VARCHAR(100),
+  severity_level VARCHAR(20)
+);
+
+
+CREATE TABLE fact_support_calls (
+  call_id SERIAL PRIMARY KEY,
+  customer_id INT REFERENCES dim_customer(customer_id),
+  agent_id INT REFERENCES dim_agent(agent_id),
+  time_id INT REFERENCES dim_time(time_id),
+  issue_id INT REFERENCES dim_issue_type(issue_id),
+  call_duration_minutes INT,
+  issue_resolved BOOLEAN
+);
+
+
+INSERT INTO dim_customer (customer_name, country)
+VALUES ('John Doe', 'India');
+
+INSERT INTO dim_agent (agent_name, department)
+VALUES ('Alice Smith', 'Tech Support');
+
+INSERT INTO dim_time (call_date, week, month, year)
+VALUES ('2025-07-01', 27, 'July', 2025);
+
+INSERT INTO dim_issue_type (issue_type, severity_level)
+VALUES ('Login Failure', 'Medium');
+
+INSERT INTO fact_support_calls (customer_id, agent_id, time_id, issue_id, call_duration_minutes, issue_resolved)
+VALUES (1, 1, 1, 1, 15, TRUE);
+
+
+SELECT a.agent_name, COUNT(f.call_id) AS total_calls
+FROM fact_support_calls f
+JOIN dim_agent a ON f.agent_id = a.agent_id
+GROUP BY a.agent_name;
+
+SELECT issue_resolved, COUNT(*) AS call_count
+FROM fact_support_calls
+GROUP BY issue_resolved;
+
+SELECT c.customer_name, SUM(f.call_duration_minutes) AS total_minutes
+FROM fact_support_calls f
+JOIN dim_customer c ON f.customer_id = c.customer_id
+GROUP BY c.customer_name;
+
+SELECT i.issue_type, i.severity_level, COUNT(*) AS total_calls
+FROM fact_support_calls f
+JOIN dim_issue_type i ON f.issue_id = i.issue_id
+GROUP BY i.issue_type, i.severity_level;
+
+
+
+CREATE TABLE dim_time (
+  time_id INT PRIMARY KEY,
+  date DATE,
+  month INT,
+  quarter INT,
+  year INT
+);
+
+CREATE TABLE dim_location (
+  location_id INT PRIMARY KEY,
+  city VARCHAR(50),
+  state VARCHAR(50),
+  country VARCHAR(50)
+);
+
+CREATE TABLE dim_customer (
+  customer_id INT PRIMARY KEY,
+  customer_name VARCHAR(100),
+  email VARCHAR(100),
+  phone VARCHAR(20),
+  location_id INT,
+  FOREIGN KEY (location_id) REFERENCES dim_location(location_id)
+);
+
+CREATE TABLE dim_department (
+  department_id INT PRIMARY KEY,
+  department_name VARCHAR(100)
+);
+
+CREATE TABLE dim_agent (
+  agent_id INT PRIMARY KEY,
+  agent_name VARCHAR(100),
+  department_id INT,
+  FOREIGN KEY (department_id) REFERENCES dim_department(department_id)
+);
+
+CREATE TABLE dim_issue_category (
+  issue_category_id INT PRIMARY KEY,
+  issue_category_name VARCHAR(100)
+);
+
+CREATE TABLE dim_issue (
+  issue_id INT PRIMARY KEY,
+  issue_type VARCHAR(100),
+  issue_category_id INT,
+  FOREIGN KEY (issue_category_id) REFERENCES dim_issue_category(issue_category_id)
+);
+
+CREATE TABLE fact_support_calls (
+  call_id INT PRIMARY KEY,
+  customer_id INT,
+  agent_id INT,
+  issue_id INT,
+  time_id INT,
+  duration_minutes DECIMAL(5,2),
+  resolution_status VARCHAR(50),
+  FOREIGN KEY (customer_id) REFERENCES dim_customer(customer_id),
+  FOREIGN KEY (agent_id) REFERENCES dim_agent(agent_id),
+  FOREIGN KEY (issue_id) REFERENCES dim_issue(issue_id),
+  FOREIGN KEY (time_id) REFERENCES dim_time(time_id)
+);
+
+SELECT t.year, t.month, COUNT(f.call_id) AS total_calls
+FROM fact_support_calls f
+JOIN dim_time t ON f.time_id = t.time_id
+GROUP BY t.year, t.month
+ORDER BY t.year, t.month;
+
+SELECT ic.issue_category_name, COUNT(f.call_id) AS total_calls
+FROM fact_support_calls f
+JOIN dim_issue i ON f.issue_id = i.issue_id
+JOIN dim_issue_category ic ON i.issue_category_id = ic.issue_category_id
+GROUP BY ic.issue_category_name
+ORDER BY total_calls DESC;
+
+SELECT d.department_name, AVG(f.duration_minutes) AS avg_duration
+FROM fact_support_calls f
+JOIN dim_agent a ON f.agent_id = a.agent_id
+JOIN dim_department d ON a.department_id = d.department_id
+GROUP BY d.department_name
+ORDER BY avg_duration DESC;
+
+SELECT l.country, f.resolution_status, COUNT(f.call_id) AS total
+FROM fact_support_calls f
+JOIN dim_customer c ON f.customer_id = c.customer_id
+JOIN dim_location l ON c.location_id = l.location_id
+GROUP BY l.country, f.resolution_status
+ORDER BY l.country, total DESC;

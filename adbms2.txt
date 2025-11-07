@@ -1,0 +1,93 @@
+use mydb
+
+db.orders.insertMany([
+  { item: "apple", price: 20, quantity: 5, category: "fruit" },
+  { item: "banana", price: 10, quantity: 10, category: "fruit" },
+  { item: "milk", price: 30, quantity: 2, category: "dairy" },
+  { item: "cheese", price: 50, quantity: 1, category: "dairy" },
+  { item: "carrot", price: 15, quantity: 4, category: "vegetable" }
+])
+
+db.orders.find().pretty()
+
+db.orders.aggregate([
+  { $match: { category: "fruit" } }
+])
+
+db.orders.aggregate([
+  { $project: { item: 1, total: { $multiply: ["$price", "$quantity"] } } }
+])
+
+db.orders.aggregate([
+  { $group: { _id: "$category", totalQuantity: { $sum: "$quantity" } } }
+])
+
+db.orders.aggregate([
+  { $sort: { price: -1 } }
+])
+
+db.orders.aggregate([
+  { $match: { quantity: { $gt: 3 } } },
+  { $project: { item: 1, total: { $multiply: ["$price", "$quantity"] } } },
+  { $sort: { total: -1 } }
+])
+
+
+db.sales.insertMany([
+  { item: "pen", quantity: 10, price: 5 },
+  { item: "pen", quantity: 15, price: 5 },
+  { item: "book", quantity: 5, price: 20 },
+  { item: "book", quantity: 2, price: 20 },
+  { item: "pencil", quantity: 7, price: 2 }
+])
+
+
+var mapFunction = function() {
+  emit(this.item, this.quantity);
+};
+
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+};
+
+
+var mapFunction = function() {
+  emit(this.item, this.quantity);
+};
+
+var reduceFunction = function(key, values) {
+  return Array.sum(values);
+};
+
+
+db.sales.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "total_sales" }
+)
+
+
+db.total_sales.find().pretty()
+
+
+db.students.insertMany([
+  { name: "Amit", age: 21, marks: 85, subjects: ["Math", "Physics"] },
+  { name: "Neha", age: 22, marks: 92, subjects: ["Chemistry", "Biology"] },
+  { name: "Ravi", age: 21, marks: 75, subjects: ["Physics", "Chemistry"] },
+  { name: "Kiran", age: 23, marks: 88, subjects: ["Math", "Biology"] }
+])
+
+
+db.students.createIndex({ name: 1 })
+
+db.students.createIndex({ subjects: 1 })
+
+db.students.createIndex({ age: 1, marks: -1 })
+
+db.students.createIndex({ name: "text" })
+
+db.students.createIndex({ name: "hashed" })
+
+db.students.getIndexes()
+
+db.students.dropIndex("name_1")

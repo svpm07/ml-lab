@@ -1,0 +1,69 @@
+1. insert record:
+ db.students.insertOne({ 
+ roll_no: 101, 
+name: "Ananya Sharma", 
+age: 20, 
+department: "Computer", 
+subjects: ["Math", "DS", "OS"], 
+cgpa: 8.7 
+}) 
+
+1.Find All
+ db.students.find()
+ 2.Find One
+ db.students.findOne({ roll_no: 103 })
+ 3. CGPA > 8
+ db.students.find({ cgpa: { $gt: 8 } })
+ 4. OR Query
+ db.students.find({ $or: [ { department: "Computer" }, { cgpa: { $lt: 8 } } ] })
+
+5.NOT Query
+ db.students.find({ department: { $not: { $eq: "Computer" } } })
+studentDB> db.students.find({department: {$ne: "Computer"}})
+
+ 6. Null Check
+ db.students.find({ project: null })
+ 7.Regex Query
+ db.students.find({ name: /^A/ })
+ 8. Array Query
+ db.students.find({ subjects: "AI" })
+ 9. $where Query
+ db.students.find({ $where: "this.cgpa > 9" })
+ 10. Cursor Options
+ db.students.find().sort({ cgpa:-1 }).skip(1).limit(2)
+
+11. Regex query
+ db.students.find({name:/^A/}) 
+
+12.db.students.find({$where : "this.cgpa>9"}) 
+
+Limit:
+db.students.find().sort({ cgpa: -1 }).skip(1).limit(3)
+
+Batch insert
+db.students.insertMany([
+ {
+ roll_no: 102,
+ name: "Ravi Patel",
+ age: 21,
+ department: "Mechanical",
+ subjects: ["Thermo", "Design"],
+ cgpa: 7.5
+ },
+ {
+ roll_no: 103,
+ name: "Neha Jain",
+ age: 19,
+ department: "Computer",
+ subjects: ["DS", "AI", "DBMS"],
+ cgpa: 9.0
+ }
+ {
+ roll_no: 104,
+ name: "Amol Godse",
+ age: 19,
+ department: "Computer",
+ subjects: ["DS", "AI", "DBMS"],
+ cgpa: 9.0
+ }
+ ])
